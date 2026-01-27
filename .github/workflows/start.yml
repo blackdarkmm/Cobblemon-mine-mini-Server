@@ -50,6 +50,15 @@ jobs:
           npm init -y
           npm install express
 
+      - name: 安裝 rclone
+        run: |
+          curl https://rclone.org/install.sh | sudo bash
+
+      - name: 寫入 rclone 設定檔（base64）
+        run: |
+          mkdir -p ~/.config/rclone
+          echo "${{ secrets.RCLONE_CONFIG_BASE64 }}" | base64 -d > ~/.config/rclone/rclone.conf
+
       - name: 下載 world.zip（從 Google Drive 專屬通道）
         env:
           # 使用你已經設定好的 Rclone 配置
@@ -234,15 +243,6 @@ jobs:
           fi
       - name: 壓縮世界
         run: zip -r world.zip world
-
-      - name: 安裝 rclone
-        run: |
-          curl https://rclone.org/install.sh | sudo bash
-
-      - name: 寫入 rclone 設定檔（base64）
-        run: |
-          mkdir -p ~/.config/rclone
-          echo "${{ secrets.RCLONE_CONFIG_BASE64 }}" | base64 -d > ~/.config/rclone/rclone.conf
 
       - name: 上傳 world.zip 到 Google Drive
         run: |
