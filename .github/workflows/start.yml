@@ -67,7 +67,12 @@ jobs:
           # 使用 id=$FILE_ID 語法將遠端根目錄直接定位到該檔案
           rclone copyto "gdrive,id=$FILE_ID:" ./world.zip -v \
             --drive-chunk-size 256M \
-            --tpslimit 10 \
+            --buffer-size 128M \
+            --tpslimit 3 \
+            --drive-pacer-min-sleep 200ms \
+            --drive-pacer-burst 1 \
+            --retries 10 \
+            --low-level-retries 20 \
             --stats 10s
             
       - name: 下載 Cobblemon-fabric-1.7.1+1.21.1.jar（從 Google Drive）
