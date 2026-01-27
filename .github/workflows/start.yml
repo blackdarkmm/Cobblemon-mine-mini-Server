@@ -71,7 +71,7 @@ jobs:
             --drive-chunk-size 256M \
             --tpslimit 10 \
             --stats 10s \
-            -v || \
+            -v
             
       - name: 下載 Cobblemon-fabric-1.7.1+1.21.1.jar（從 Google Drive）
         env:
