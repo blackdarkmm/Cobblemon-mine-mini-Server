@@ -242,8 +242,6 @@ jobs:
           else
             echo "伺服器已關閉，無需再次 stop。"
           fi
-      - name: 壓縮世界
-        run: zip -r world.zip world
 
       - name: 壓縮並分割檔案 (每 2GB 一個分卷)
         run: |
