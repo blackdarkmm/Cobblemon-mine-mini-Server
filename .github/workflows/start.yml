@@ -79,6 +79,11 @@ jobs:
           echo "正在合併分卷..."
           zip -v -s 0 world.zip --out combined_world.zip
 
+          echo "2. 關鍵動作：立即刪除所有分割卷，防止干擾解壓..."
+          # 這裡把 world.z01, world.z02, world.zip 全部砍掉
+          # 騰出 5.5GB 空間，並讓 unzip 只能看到唯一一個檔案
+          rm -f world.z01 world.z02 world.zip
+
           # 3. 解壓縮合併後的完整檔案
           echo "正在解壓世界存檔..."
           unzip -v -o combined_world.zip
