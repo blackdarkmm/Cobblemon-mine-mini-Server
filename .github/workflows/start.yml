@@ -54,14 +54,9 @@ jobs:
         run: |
           curl https://rclone.org/install.sh | sudo bash
 
-      - name: 寫入 rclone 設定檔（base64）
-        run: |
-          mkdir -p ~/.config/rclone
-          echo "${{ secrets.RCLONE_CONFIG_BASE64 }}" | base64 -d > ~/.config/rclone/rclone.conf
-
       - name: 下載 world.zip（從 Google Drive 專屬通道）
         env:
-          FILE_ID: ${{ secrets.GDRIVE_FILE_ID }}
+          RCLONE_CONFIG_GDRIVE_BASE64: ${{ secrets.RCLONE_CONFIG_BASE64 }}
         run: |
           # 直接指定雲端路徑，並強制下載為目前目錄的 world.zip
           # 這樣就不會產生 CobblemonWorld 資料夾，檔案會直接出現在 ./world.zip
