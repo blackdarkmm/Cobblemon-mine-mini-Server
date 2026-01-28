@@ -59,19 +59,32 @@ jobs:
           mkdir -p ~/.config/rclone
           echo "${{ secrets.RCLONE_CONFIG_BASE64 }}" | base64 -d > ~/.config/rclone/rclone.conf
 
-      - name: 下載 world.zip（從 Google Drive 專屬通道）
+      - name: 下載分卷並合併解壓
         run: |
-          # 直接指定雲端路徑，並強制下載為目前目錄的 world.zip
-          # 這樣就不會產生 CobblemonWorld 資料夾，檔案會直接出現在 ./world.zip
-           rclone copyto gdrive:CobblemonWorld/world.zip ./world.zip -v \
+          echo "正在從第二個帳號下載所有世界分卷..."
+          # 1. 下載 CobblemonWorld 資料夾下所有以 world 開頭的檔案
+          rclone -vv copy gdrive2:CobblemonWorld/ . \
+            --include "world.z*" \
+            --include "world.zip" \
             --drive-chunk-size 256M \
-            --buffer-size 128M \
             --tpslimit 3 \
-            --drive-pacer-min-sleep 200ms \
-            --drive-pacer-burst 1 \
-            --retries 10 \
-            --low-level-retries 20 \
             --stats 10s
+
+          echo "正在檢查下載的檔案..."
+          ls -lh world.*
+
+          # 2. 合併分卷 (這是關鍵)
+          # -s 0 代表將分割卷合併成一個完整的單一 zip
+          # world.zip 是主索引檔，--out 指定輸出的完整檔名
+          echo "正在合併分卷..."
+          zip -v -s 0 world.zip --out combined_world.zip
+
+          # 3. 解壓縮合併後的完整檔案
+          echo "正在解壓世界存檔..."
+          unzip -v -o combined_world.zip
+          
+          # 4. 清理暫存的壓縮檔 (選用，節省 Runner 空間)
+          rm world.z* world.zip combined_world.zip
             
       - name: 下載 Cobblemon-fabric-1.7.1+1.21.1.jar（從 Google Drive）
         env:
@@ -79,15 +92,6 @@ jobs:
         run: |
           echo "從 Google Drive 下載 Cobblemon-fabric-1.7.1+1.21.1.jar..."
           gdown --id $FILE_ID -O "mods/Cobblemon-fabric-1.7.1+1.21.1.jar"
-
-      - name: 解壓縮世界檔案（如有）
-        run: |
-          if [ -f world.zip ]; then
-            echo "Found world.zip, attempting unzip..."
-            unzip world.zip
-          else
-            echo "No world.zip found, skipping unzip."
-          fi
 
       - name: 安裝 ZeroTier CLI
         run: |
