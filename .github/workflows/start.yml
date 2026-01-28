@@ -245,20 +245,29 @@ jobs:
       - name: 壓縮世界
         run: zip -r world.zip world
 
+      - name: 壓縮並分割檔案 (每 2GB 一個分卷)
+        run: |
+          echo "正在壓縮並分割世界檔案..."
+          # 確保舊檔清理乾淨
+          rm -f world.zip world.z*
+          # 將資料夾壓縮成每份 2GB 的分卷
+          zip -r -s 2g world.zip ./world_folder_name
+
       - name: 上傳 world.zip 到 Google Drive
         run: |
-          echo "上傳 world.zip 到 Google Drive..."
-          rclone -vv copyto world.zip gdrive:CobblemonWorld/world.zip \
+          echo "開始上傳到 CobblemonWorld/Split_Backups ..."
+          # 核心變動：目標路徑改為 CobblemonWorld/Split_Backups
+          rclone copy ./ gdrive:CobblemonWorld/Split_Backups/ \
+            --include "world.z*" \
+            --include "world.zip" \
             --drive-chunk-size 128M \
             --tpslimit 1 \
             --drive-pacer-min-sleep 500ms \
             --drive-pacer-burst 1 \
-            --buffer-size 32M \
             --transfers 1 \
-            --retries 20 \
-            --low-level-retries 30 \
+            --retries 15 \
             --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36" \
-            --stats 30s
+            --stats 10s
 
       # 最後一個 step 觸發自己重新執行
       - name: 觸發下一次執行
