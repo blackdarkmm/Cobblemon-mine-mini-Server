@@ -257,7 +257,6 @@ jobs:
             --transfers 1 \
             --retries 20 \
             --low-level-retries 30 \
-            --drive-pacer-decay-constant 10s \
             --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36" \
             --stats 30s
 
