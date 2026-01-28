@@ -252,10 +252,14 @@ jobs:
           zip -r -s 2g world.zip ./world
 
       - name: 上傳 world.zip 到 Google Drive
+        env:
+          SHARED_FOLDER_ID: ${{ secrets.GDRIVE_SHARED_FOLDER_ID }}
         run: |
-          echo "開始上傳到 CobblemonWorld/Split_Backups ..."
-          # 核心變動：目標路徑改為 CobblemonWorld/Split_Backups
-          rclone copy ./ gdrive:CobblemonWorld/Split_Backups/ \
+          echo "正在上傳至第二個帳號的共用資料夾 (ID: $SHARED_FOLDER_ID)..."
+          # 加上 --drive-root-folder-id 參數，這會強制將上傳目標指向該共用空間
+          # 注意：目標路徑寫 gdrive: 即可，因為 root 已經被鎖定在該資料夾了
+          rclone copy ./ gdrive: \
+            --drive-root-folder-id "$SHARED_FOLDER_ID" \
             --include "world.z*" \
             --include "world.zip" \
             --drive-chunk-size 128M \
