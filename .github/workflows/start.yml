@@ -255,7 +255,7 @@ jobs:
           
           # 注意：這裡使用 gdrive2: 是因為您在 PowerShell 設定時取的名稱
           # 目標路徑會直接在第二個帳號建立 CobblemonWorld 資料夾
-          rclone copy ./ gdrive2:CobblemonWorld/ \
+          rclone -vv copy ./ gdrive2:CobblemonWorld/ \
             --include "world.z*" \
             --include "world.zip" \
             --drive-chunk-size 128M \
