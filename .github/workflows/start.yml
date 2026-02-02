@@ -7,7 +7,7 @@ on:
 
 jobs:
   minecraft:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     env:
       RCON_PASSWORD: ${{ secrets.RCON_PASSWORD }}
