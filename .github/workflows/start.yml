@@ -77,7 +77,7 @@ jobs:
             --tpslimit 3 \
             --vfs-write-back 5s \
             --attr-timeout 1s \
-            --daemon
+            --allow-other &
 
           echo "等待掛載生效 (15秒)..."
           sleep 15
