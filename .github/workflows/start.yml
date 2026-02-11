@@ -61,6 +61,9 @@ jobs:
 
       - name: 聯合掛載雲端世界 (替代下載解壓)
         run: |
+          # 2. 解鎖 user_allow_other 權限 (關鍵步驟)
+          sudo sed -i 's/#user_allow_other/user_allow_other/' /etc/fuse.conf
+        
           echo "正在建立掛載點..."
           mkdir -p ./world
           
