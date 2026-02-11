@@ -59,51 +59,39 @@ jobs:
           mkdir -p ~/.config/rclone
           echo "${{ secrets.RCLONE_CONFIG_BASE64 }}" | base64 -d > ~/.config/rclone/rclone.conf
 
-      - name: 下載分卷並合併解壓
+      - name: 聯合掛載雲端世界 (替代下載解壓)
         run: |
-          echo "正在從第二個帳號下載所有世界分卷..."
-          # 1. 下載 CobblemonWorld 資料夾下所有以 world 開頭的檔案
-          rclone -vv copy gdrive2:CobblemonWorld/ . \
-            --include "world.z*" \
-            --include "world.zip" \
-            --drive-chunk-size 256M \
+          echo "正在建立掛載點..."
+          mkdir -p ./world
+          
+          echo "執行 Rclone 聯合掛載..."
+          # 這裡使用你設定好的 combined 遠端
+          # --daemon: 背景執行
+          # --vfs-cache-mode full: 必備，讓伺服器能隨機讀寫區塊
+          # --vfs-cache-max-size 5G: 限制快取大小，保護 Runner 剩餘空間
+          rclone mount combined:world ./world \
+            --vfs-cache-mode full \
+            --vfs-cache-max-size 5G \
+            --vfs-read-chunk-size 32M \
+            --buffer-size 64M \
             --tpslimit 3 \
-            --stats 10s
+            --vfs-write-back 5s \
+            --attr-timeout 1s \
+            --daemon
 
-          echo "正在檢查下載的檔案..."
-          ls -lh world.*
+          echo "等待掛載生效 (15秒)..."
+          sleep 15
 
-          # 2. 合併分卷 (這是關鍵)
-          # -s 0 代表將分割卷合併成一個完整的單一 zip
-          # world.zip 是主索引檔，--out 指定輸出的完整檔名
-          echo "正在合併分卷..."
-          zip -v -s 0 world.zip --out combined_world.zip
-
-          echo "2. 關鍵動作：立即刪除所有分割卷，防止干擾解壓..."
-          # 這裡把 world.z01, world.z02, world.zip 全部砍掉
-          # 騰出 5.5GB 空間，並讓 unzip 只能看到唯一一個檔案
-          rm -f world.z01 world.z02 world.zip
-
-          # 3. 執行解壓 (不顯示詳細日誌，減少輸出負擔，節省 Runner 資源)
-          echo "正在解壓世界存檔 (請稍候)..."
-          unzip -q -o combined_world.zip
-
-          # 4. 【關鍵】解壓完立刻刪除合併檔
-          echo "正在刪除合併檔，釋放最後的空間..."
-          rm -f combined_world.zip
-
-          # 5. 檢查結果
-          echo "檢查 world 資料夾是否就緒："
-          if [ -d "world" ]; then
-            echo "成功！world 資料夾已出現。"
-            ls -d world/
+          echo "檢查掛載結果："
+          if [ -f "./world/level.dat" ]; then
+            echo "✅ 成功！雲端世界已掛載，level.dat 已就緒。"
+            ls -lh ./world/level.dat
           else
-            echo "依舊找不到資料夾，顯示當前所有檔案："
-            ls -lh
+            echo "❌ 掛載失敗或檔案尚未同步，當前目錄內容："
+            ls -R ./world | head -n 10
             exit 1
           fi
 
-      
       - name: 下載 Cobblemon-fabric-1.7.1+1.21.1.jar（從 Google Drive）
         env:
           FILE_ID: ${{ secrets.GDRIVE_FILE_ID2 }}
@@ -263,31 +251,14 @@ jobs:
             echo "伺服器已關閉，無需再次 stop。"
           fi
 
-      - name: 壓縮並分割檔案 (每 2GB 一個分卷)
+      - name: 等待最後的雲端存檔同步 (VFS Sync)
+        if: always() # 確保就算伺服器當機也會執行同步
         run: |
-          echo "正在壓縮並分割世界檔案..."
-          # 確保舊檔清理乾淨
-          rm -f world.zip world.z*
-          # 將資料夾壓縮成每份 2GB 的分卷
-          zip -r -s 2g world.zip ./world
-
-      - name: 上傳 world.zip 到 Google Drive
-        run: |
-          echo "正在使用第二個帳號的專屬通道上傳..."
-          
-          # 注意：這裡使用 gdrive2: 是因為您在 PowerShell 設定時取的名稱
-          # 目標路徑會直接在第二個帳號建立 CobblemonWorld 資料夾
-          rclone -vv copy ./ gdrive2:CobblemonWorld/ \
-            --include "world.z*" \
-            --include "world.zip" \
-            --drive-chunk-size 128M \
-            --tpslimit 1 \
-            --drive-pacer-min-sleep 500ms \
-            --drive-pacer-burst 1 \
-            --transfers 1 \
-            --retries 15 \
-            --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36" \
-            --stats 10s
+          echo "⏳ 伺服器已關閉，正在等待 Rclone 將最後的 VFS 快取寫回雲端..."
+          # 給予足夠的緩衝時間 (建議 60 秒，應對 8GB 世界的變動量)
+          sleep 60
+          sync
+          echo "✅ 雲端數據同步完成。"
 
       # 最後一個 step 觸發自己重新執行
       - name: 觸發下一次執行
