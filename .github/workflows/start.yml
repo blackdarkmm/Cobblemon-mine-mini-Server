@@ -241,8 +241,7 @@ jobs:
         run: |
           echo "1. 正在清理雲端舊分卷，避免新舊檔案混亂..."
           # 刪除舊的 world.tar.zst.aa, .ab 等檔案
-          rclone delete gdrive2:CobblemonWorld/ --include "world.tar.zst.*" --tpslimit 3
-
+          rclone delete gdrive2:CobblemonWorld/ --include "world.tar.zst.*" --drive-use-trash=false
           echo "2. 正在執行串流壓縮並分卷傳回 Google Drive..."
           # 核心邏輯：
           # tar --zstd: 將 world 資料夾打包並用 zstd 壓縮
