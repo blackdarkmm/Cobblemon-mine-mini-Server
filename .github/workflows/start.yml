@@ -59,21 +59,21 @@ jobs:
           mkdir -p ~/.config/rclone
           echo "${{ secrets.RCLONE_CONFIG_BASE64 }}" | base64 -d > ~/.config/rclone/rclone.conf
 
-      - name: 終極空間優化：tar.zst 串流解壓 (精準路徑版)
+      - name: 終極空間優化：tar.zst 串流解壓 (支援多分卷)
         run: |
-          echo "1. 檢查雲端是否存在該路徑..."
-          rclone lsf gdrive2:CobblemonWorld/
+          echo "1. 檢查雲端分卷清單..."
+          rclone lsf gdrive2:CobblemonWorld/ --include "world.tar.zst.a*"
 
-          echo "2. 正在串流下載並解壓..."
-          # 修正點：移除路徑末端的 *，改用 --include 模式，這能強制 rclone 按順序串接檔案
-          rclone cat gdrive2:CobblemonWorld/ --include "world.tar.zst*" | tar --zstd -xf -
+          echo "2. 正在串流下載並解壓縮 (不產生任何暫存檔)..."
+          # 使用 --include 確保按字母順序 (aa, ab...) 抓取並串接
+          rclone cat gdrive2:CobblemonWorld/ --include "world.tar.zst.a*" | tar --zstd -xf -
 
           echo "3. 檢查結果..."
           if [ -d "world" ]; then
             echo "成功！world 資料夾已就緒。"
             du -sh world/
           else
-            echo "錯誤：解壓縮失敗，請確認雲端檔案名稱開頭是否為 world.tar.zst"
+            echo "錯誤：解壓失敗，請檢查雲端檔名是否為 world.tar.zst.aa"
             exit 1
           fi
       
