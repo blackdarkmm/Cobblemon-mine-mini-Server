@@ -77,11 +77,11 @@ jobs:
           fi
       
       - name: 下載 Cobblemon-fabric-1.7.1+1.21.1.jar（從 Google Drive）
-        env:
-          FILE_ID: ${{ secrets.GDRIVE_FILE_ID2 }}
+        #env:
+          #FILE_ID: ${{ secrets.GDRIVE_FILE_ID2 }}
         run: |
-          echo "從 Google Drive 下載 Cobblemon-fabric-1.7.1+1.21.1.jar..."
-          gdown --id $FILE_ID -O "mods/Cobblemon-fabric-1.7.1+1.21.1.jar"
+          #echo "從 Google Drive 下載 Cobblemon-fabric-1.7.1+1.21.1.jar..."
+          #gdown --id $FILE_ID -O "mods/Cobblemon-fabric-1.7.1+1.21.1.jar"
 
       - name: 安裝 ZeroTier CLI
         run: |
